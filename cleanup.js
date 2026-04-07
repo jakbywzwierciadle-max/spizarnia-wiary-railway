@@ -34,4 +34,31 @@ export default async function cleanup() {
     );
 
     // Oblicz całkowity rozmiar
-    let
+    let totalSize = fileStats.reduce((sum, f) => sum + f.size, 0);
+
+    console.log(`📦 Current size: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+
+    // Jeśli nie przekracza limitu — nic nie rób
+    if (totalSize <= MAX_SIZE_BYTES) {
+      console.log("👌 No cleanup needed.");
+      return;
+    }
+
+    // Sortuj od najstarszych do najnowszych
+    fileStats.sort((a, b) => a.mtime - b.mtime);
+
+    // Usuwaj najstarsze pliki aż do zejścia poniżej limitu
+    for (const file of fileStats) {
+      if (totalSize <= MAX_SIZE_BYTES) break;
+
+      console.log(`🗑️ Removing: ${file.name}`);
+      await fs.promises.unlink(file.path);
+
+      totalSize -= file.size;
+    }
+
+    console.log("✅ Cleanup finished.");
+  } catch (err) {
+    console.error("❌ Cleanup error:", err);
+  }
+}
