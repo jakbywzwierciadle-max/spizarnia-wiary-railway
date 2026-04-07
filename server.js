@@ -7,21 +7,6 @@ import cleanup from "./cleanup.js";
 const app = express();
 
 app.get("/", (req, res) => res.send("Spiżarnia Wiary działa"));
-app.get("/feed", (req, res) => res.sendFile("/app/feed.xml"));
-
-cron.schedule("*/30 * * * *", async () => {
-  console.log("⏳ Running workflow...");
-  await downloadLatest();
-  await generateFeed();
-  console.log("🚀 Workflow done.");
-});
-
-cron.schedule("0 3 * * *", async () => {
-  await cleanup();
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
 
 app.get("/run", async (req, res) => {
   try {
@@ -35,3 +20,25 @@ app.get("/run", async (req, res) => {
   }
 });
 
+// 🔥 URUCHOMIENIE WORKFLOW OD RAZU PO STARCIU
+(async () => {
+  console.log("⏳ Running workflow on startup...");
+  await downloadLatest();
+  await generateFeed();
+})();
+
+// Cron co 30 minut
+cron.schedule("*/30 * * * *", async () => {
+  console.log("⏳ Running workflow...");
+  await downloadLatest();
+  await generateFeed();
+  console.log("🚀 Workflow done.");
+});
+
+// Cleanup o 3:00
+cron.schedule("0 3 * * *", async () => {
+  await cleanup();
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
