@@ -28,7 +28,28 @@ export default async function downloadLatest() {
 
   const page = await browser.newPage();
 
+  // 🔥 YouTube anti-bot bypass
+  await page.setExtraHTTPHeaders({
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"
+  });
+
   await page.goto(CHANNEL_URL, { waitUntil: "networkidle" });
+
+  // 🔥 Scrollowanie, aby wymusić załadowanie filmów
+  await page.evaluate(async () => {
+    await new Promise((resolve) => {
+      let total = 0;
+      const interval = setInterval(() => {
+        window.scrollBy(0, 500);
+        total += 500;
+        if (total > 3000) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 200);
+    });
+  });
 
   // 🔥 stabilny selektor YouTube
   const videoUrl = await page.evaluate(() => {
@@ -39,7 +60,7 @@ export default async function downloadLatest() {
   await browser.close();
 
   if (!videoUrl) {
-    console.log("⚠️ No video found.");
+    console.log("⚠️ No video found after scroll.");
     return;
   }
 
