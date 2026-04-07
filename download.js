@@ -10,8 +10,15 @@ const __dirname = path.dirname(__filename);
 
 const TARGET_DIR = __dirname;
 
-// 🔥 Invidious RSS (działa zawsze)
-const RSS_URL = "https://yewtu.be/feed/channel/UCp0sJtYwcmBHQYaWV7k_gHA";
+// 3 niezależne mirrory Invidious
+const MIRRORS = [
+  "https://yewtu.be",
+  "https://vid.puffyan.us",
+  "https://invidious.snopyta.org"
+];
+
+// YouTube RSS fallback
+const YT_RSS = "https://www.youtube.com/feeds/videos.xml?channel_id=UCp0sJtYwcmBHQYaWV7k_gHA";
 
 function run(cmd) {
   return new Promise((resolve, reject) => {
@@ -22,7 +29,7 @@ function run(cmd) {
   });
 }
 
-function fetchRSS(url) {
+function fetch(url) {
   return new Promise((resolve, reject) => {
     https.get(
       url,
@@ -42,40 +49,78 @@ function fetchRSS(url) {
   });
 }
 
-export default async function downloadLatest() {
-  console.log("🎧 Checking Invidious RSS feed...");
+async function tryParseRSS(url) {
+  const xml = await fetch(url);
 
-  const xml = await fetchRSS(RSS_URL);
-
-  if (!xml || xml.trim().startsWith("<!DOCTYPE html")) {
-    console.log("⚠️ Invidious returned HTML (mirror down).");
-    return;
+  if (!xml || xml.trim().startsWith("<!DOCTYPE html") || xml.trim().startsWith("<html")) {
+    return null;
   }
 
-  let parsed;
   try {
-    parsed = await xml2js.parseStringPromise(xml);
-  } catch (err) {
-    console.log("⚠️ Failed to parse RSS XML:", err.message);
-    return;
+    const parsed = await xml2js.parseStringPromise(xml);
+    const entries = parsed.feed?.entry;
+    if (!entries || entries.length === 0) return null;
+
+    return entries[0].link[0].$.href;
+  } catch {
+    return null;
+  }
+}
+
+async function tryYouTubeOEmbed() {
+  const url = "https://www.youtube.com/oembed?url=https://www.youtube.com/channel/UCp0sJtYwcmBHQYaWV7k_gHA&format=json";
+
+  try {
+    const json = await fetch(url);
+    const data = JSON.parse(json);
+
+    if (data?.thumbnail_url) {
+      const videoId = data.thumbnail_url.split("/vi/")[1]?.split("/")[0];
+      if (videoId) return "https://www.youtube.com/watch?v=" + videoId;
+    }
+  } catch {}
+
+  return null;
+}
+
+export default async function downloadLatest() {
+  console.log("🎧 Checking multi‑mirror RSS...");
+
+  // 1. Invidious mirrors
+  for (const mirror of MIRRORS) {
+    const url = `${mirror}/feed/channel/UCp0sJtYwcmBHQYaWV7k_gHA`;
+    console.log("🔎 Trying mirror:", url);
+
+    const video = await tryParseRSS(url);
+    if (video) {
+      console.log("🎬 Latest video:", video);
+      return await download(video);
+    }
   }
 
-  const entries = parsed.feed?.entry;
-  if (!entries || entries.length === 0) {
-    console.log("⚠️ No entries in RSS.");
-    return;
+  // 2. YouTube RSS fallback
+  console.log("🔎 Trying YouTube RSS...");
+  const ytVideo = await tryParseRSS(YT_RSS);
+  if (ytVideo) {
+    console.log("🎬 Latest video:", ytVideo);
+    return await download(ytVideo);
   }
 
-  const latest = entries[0];
-  const videoUrl = latest.link[0].$.href;
+  // 3. YouTube oEmbed fallback
+  console.log("🔎 Trying YouTube oEmbed...");
+  const oembedVideo = await tryYouTubeOEmbed();
+  if (oembedVideo) {
+    console.log("🎬 Latest video:", oembedVideo);
+    return await download(oembedVideo);
+  }
 
-  console.log("🎬 Latest video:", videoUrl);
+  console.log("❌ No video found on any source.");
+}
 
+async function download(videoUrl) {
   const output = path.join(TARGET_DIR, "%(title)s.%(ext)s");
 
   console.log("⬇️ Downloading audio...");
-
   await run(`yt-dlp -x --audio-format mp3 -o "${output}" "${videoUrl}"`);
-
   console.log("✅ Audio downloaded.");
 }
