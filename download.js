@@ -19,17 +19,17 @@ function execPromise(cmd) {
 }
 
 export default async function downloadLatest() {
-  console.log("🎧 Checking YouTube channel with cookies...");
+  console.log("🎧 Checking YouTube channel with cookies (Base64)...");
 
-  // 🔥 ZABEZPIECZENIE — jeśli cookies nie istnieją, nie crashujemy
-  if (!process.env.YTDLP_COOKIES) {
-    console.log("❌ Missing YTDLP_COOKIES env variable.");
+  if (!process.env.YTDLP_COOKIES_BASE64) {
+    console.log("❌ Missing YTDLP_COOKIES_BASE64 env variable.");
     return;
   }
 
-  // zapisujemy cookies do pliku
+  const decoded = Buffer.from(process.env.YTDLP_COOKIES_BASE64, "base64").toString("utf8");
+
   const cookiesPath = path.join(__dirname, "cookies.txt");
-  fs.writeFileSync(cookiesPath, process.env.YTDLP_COOKIES);
+  fs.writeFileSync(cookiesPath, decoded);
 
   const output = path.join(TARGET_DIR, "%(title)s.%(ext)s");
 
