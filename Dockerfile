@@ -2,8 +2,12 @@ FROM mcr.microsoft.com/playwright:v1.44.0-jammy
 
 WORKDIR /app
 
-# Instalujemy yt-dlp natywnie
-RUN apt-get update && apt-get install -y yt-dlp ffmpeg
+# 🔥 Instalacja yt-dlp + ffmpeg (działa w Railway)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        yt-dlp \
+        ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json* ./
 RUN npm install
