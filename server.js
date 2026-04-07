@@ -11,15 +11,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// --- STATIC FILES (feed.xml, audio, etc.) ---
-app.use(express.static(path.join(__dirname)));
+// Serve static files (feed.xml, audio, etc.)
+app.use(express.static(__dirname));
 
-// --- HOME PAGE ---
+// Home page
 app.get("/", (req, res) => {
   res.send("Spiżarnia Wiary działa");
 });
 
-// --- FEED ENDPOINT ---
+// Feed endpoint
 app.get("/feed", (req, res) => {
   const feedPath = path.join(__dirname, "feed.xml");
 
@@ -30,7 +30,7 @@ app.get("/feed", (req, res) => {
   res.sendFile(feedPath);
 });
 
-// --- CRON: GENERATE FEED EVERY 30 MINUTES ---
+// Cron: generate feed every 30 minutes
 cron.schedule("*/30 * * * *", async () => {
   console.log("⏳ Generating feed...");
   try {
@@ -41,7 +41,7 @@ cron.schedule("*/30 * * * *", async () => {
   }
 });
 
-// --- CRON: CLEANUP OLD FILES EVERY NIGHT ---
+// Cron: cleanup every night at 3 AM
 cron.schedule("0 3 * * *", async () => {
   console.log("🧹 Running cleanup...");
   try {
@@ -52,7 +52,7 @@ cron.schedule("0 3 * * *", async () => {
   }
 });
 
-// --- START SERVER (Railway-compatible) ---
+// Start server (Railway-compatible)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
