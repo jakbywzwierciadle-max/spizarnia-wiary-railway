@@ -1,68 +1,60 @@
 import express from "express";
-import { chromium } from "playwright";
-import { generateFeed } from "./feed.js";
-import { cleanupOldFiles } from "./cleanup.js";
 import fs from "fs";
-import { execSync } from "child_process";
+import path from "path";
+import cron from "node-cron";
+import { fileURLToPath } from "url";
+import generateFeed from "./feed.js";
+import cleanup from "./cleanup.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use("/audio", express.static("audio"));
-app.use("/public", express.static("public"));
 
-const CHANNEL_ID = "UCO6_hwMtQZ0SLElfDMaqJGQ";
+// --- STATIC FILES (feed.xml, audio, etc.) ---
+app.use(express.static(path.join(__dirname)));
 
-async function fetchLatestVideos() {
-  console.log("Launching Chrome…");
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+// --- HOME PAGE ---
+app.get("/", (req, res) => {
+  res.send("Spiżarnia Wiary działa");
+});
 
-  await page.goto(`https://www.youtube.com/channel/${CHANNEL_ID}/videos`);
-  await page.waitForTimeout(3000);
+// --- FEED ENDPOINT ---
+app.get("/feed", (req, res) => {
+  const feedPath = path.join(__dirname, "feed.xml");
 
-  const videoIds = await page.$$eval("a#thumbnail", els =>
-    els
-      .map(e => e.href)
-      .filter(h => h.includes("watch"))
-      .map(h => new URL(h).searchParams.get("v"))
-      .filter(Boolean)
-      .slice(0, 2)
-  );
-
-  await browser.close();
-
-  if (!fs.existsSync("audio")) fs.mkdirSync("audio");
-
-  for (const id of videoIds) {
-    const out = `audio/${id}.mp3`;
-    if (fs.existsSync(out)) continue;
-
-    console.log("Downloading:", id);
-    execSync(
-      `yt-dlp --extract-audio --audio-format mp3 --audio-quality 0 -o "${out}" "https://www.youtube.com/watch?v=${id}"`,
-      { stdio: "inherit" }
-    );
+  if (!fs.existsSync(feedPath)) {
+    return res.status(404).send("Feed not generated yet");
   }
 
-  // --- FIX FOR RAILWAY DEPLOYMENT ---
+  res.sendFile(feedPath);
+});
 
+// --- CRON: GENERATE FEED EVERY 30 MINUTES ---
+cron.schedule("*/30 * * * *", async () => {
+  console.log("⏳ Generating feed...");
+  try {
+    await generateFeed();
+    console.log("✅ Feed generated");
+  } catch (err) {
+    console.error("❌ Feed generation error:", err);
+  }
+});
+
+// --- CRON: CLEANUP OLD FILES EVERY NIGHT ---
+cron.schedule("0 3 * * *", async () => {
+  console.log("🧹 Running cleanup...");
+  try {
+    await cleanup();
+    console.log("🧼 Cleanup done");
+  } catch (err) {
+    console.error("❌ Cleanup error:", err);
+  }
+});
+
+// --- START SERVER (Railway-compatible) ---
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on ${PORT}`);
 });
-
-
-  generateFeed(videoIds);
-  cleanupOldFiles();
-}
-
-app.get("/feed.xml", (req, res) => {
-  res.sendFile(process.cwd() + "/feed.xml");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on", PORT));
-
-if (process.argv.includes("--cron")) {
-  fetchLatestVideos();
-}
