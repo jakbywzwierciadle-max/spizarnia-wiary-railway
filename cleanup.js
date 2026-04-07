@@ -1,17 +1,37 @@
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-export function cleanupOldFiles() {
-  const files = fs
-    .readdirSync("audio")
-    .map(f => ({ f, size: fs.statSync("audio/" + f).size }))
-    .sort((a, b) => b.size - a.size);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  let total = files.reduce((a, b) => a + b.size, 0);
-  const limit = 500 * 1024 * 1024;
+// Maksymalny rozmiar katalogu (500 MB)
+const MAX_SIZE_BYTES = 500 * 1024 * 1024;
 
-  for (const file of files) {
-    if (total <= limit) break;
-    fs.unlinkSync("audio/" + file.f);
-    total -= file.size;
-  }
-}
+// Katalog, w którym trzymasz audio i feed.xml
+const TARGET_DIR = __dirname;
+
+export default async function cleanup() {
+  try {
+    console.log("🧹 Cleanup started...");
+
+    // Pobierz listę plików
+    const files = await fs.promises.readdir(TARGET_DIR);
+
+    // Pobierz statystyki plików
+    const fileStats = await Promise.all(
+      files.map(async (file) => {
+        const fullPath = path.join(TARGET_DIR, file);
+        const stats = await fs.promises.stat(fullPath);
+
+        return {
+          name: file,
+          path: fullPath,
+          size: stats.size,
+          mtime: stats.mtimeMs
+        };
+      })
+    );
+
+    // Oblicz całkowity rozmiar
+    let
