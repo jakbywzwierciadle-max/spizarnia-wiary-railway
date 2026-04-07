@@ -24,11 +24,21 @@ function run(cmd) {
 
 function fetchRSS(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => resolve(data));
-    }).on("error", reject);
+    https.get(
+      url,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36",
+          "Accept": "application/xml,text/xml"
+        }
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => resolve(data));
+      }
+    ).on("error", reject);
   });
 }
 
@@ -37,9 +47,21 @@ export default async function downloadLatest() {
 
   const xml = await fetchRSS(RSS_URL);
 
-  const parsed = await xml2js.parseStringPromise(xml);
+  // 🔥 Jeśli odpowiedź zaczyna się od "<!DOCTYPE html" → YouTube zwrócił stronę błędu
+  if (xml.trim().startsWith("<!DOCTYPE html") || xml.trim().startsWith("<html")) {
+    console.log("⚠️ YouTube returned HTML instead of XML (blocked).");
+    return;
+  }
 
-  const entries = parsed.feed.entry;
+  let parsed;
+  try {
+    parsed = await xml2js.parseStringPromise(xml);
+  } catch (err) {
+    console.log("⚠️ Failed to parse RSS XML:", err.message);
+    return;
+  }
+
+  const entries = parsed.feed?.entry;
   if (!entries || entries.length === 0) {
     console.log("⚠️ No entries in RSS.");
     return;
