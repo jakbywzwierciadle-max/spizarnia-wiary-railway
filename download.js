@@ -22,13 +22,17 @@ function run(cmd) {
 export default async function downloadLatest() {
   console.log("🎧 Checking YouTube channel...");
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({
+    args: ["--no-sandbox"]
+  });
+
   const page = await browser.newPage();
 
   await page.goto(CHANNEL_URL, { waitUntil: "networkidle" });
 
+  // 🔥 stabilny selektor YouTube
   const videoUrl = await page.evaluate(() => {
-    const el = document.querySelector("a#video-title");
+    const el = document.querySelector("ytd-rich-item-renderer a#video-title");
     return el ? "https://www.youtube.com" + el.getAttribute("href") : null;
   });
 
