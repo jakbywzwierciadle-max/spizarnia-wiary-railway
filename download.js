@@ -10,8 +10,8 @@ const __dirname = path.dirname(__filename);
 
 const TARGET_DIR = __dirname;
 
-// 🔥 RSS kanału YouTube
-const RSS_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCp0sJtYwcmBHQYaWV7k_gHA";
+// 🔥 Invidious RSS (działa zawsze)
+const RSS_URL = "https://yewtu.be/feed/channel/UCp0sJtYwcmBHQYaWV7k_gHA";
 
 function run(cmd) {
   return new Promise((resolve, reject) => {
@@ -43,13 +43,12 @@ function fetchRSS(url) {
 }
 
 export default async function downloadLatest() {
-  console.log("🎧 Checking YouTube RSS feed...");
+  console.log("🎧 Checking Invidious RSS feed...");
 
   const xml = await fetchRSS(RSS_URL);
 
-  // 🔥 Jeśli odpowiedź zaczyna się od "<!DOCTYPE html" → YouTube zwrócił stronę błędu
-  if (xml.trim().startsWith("<!DOCTYPE html") || xml.trim().startsWith("<html")) {
-    console.log("⚠️ YouTube returned HTML instead of XML (blocked).");
+  if (!xml || xml.trim().startsWith("<!DOCTYPE html")) {
+    console.log("⚠️ Invidious returned HTML (mirror down).");
     return;
   }
 
