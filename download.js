@@ -39,22 +39,23 @@ const cookiesPath = await fetchYoutubeCookies();
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
 
   // Hardened yt-dlp command
-  const cmd = [
-    `yt-dlp`,
-    `--cookies "${cookiesPath}"`,
-    `--force-ipv4`,
-    `--user-agent "${USER_AGENT}"`,
-    `--sleep-requests 1`,
-    `--sleep-interval 2`,
-    `--retries 10`,
-    `--retry-sleep 3`,
-    `--extractor-args "youtube:player_client=web"`,
-    `--no-check-certificate`,
-    `--playlist-end 1`,
-    `-x --audio-format mp3`,
-    `-o "${output}"`,
-    `"${CHANNEL_URL}"`
-  ].join(" ");
+ const cmd = [
+  `yt-dlp`,
+  `--cookies "${cookiesPath}"`,
+  `--force-ipv4`,
+  `--user-agent "${USER_AGENT}"`,
+  `--sleep-requests 1`,
+  `--sleep-interval 2`,
+  `--retries 10`,
+  `--retry-sleep 3`,
+  `--extractor-args "youtube:player_client=web;youtube:njs=1"`,
+  `--no-check-certificate`,
+  `--playlist-end 1`,
+  `-x --audio-format mp3`,
+  `-o "${output}"`,
+  `"${CHANNEL_URL}"`
+].join(" ");
+
 
   console.log("⬇️ Downloading latest video audio...");
   console.log("🔧 Running command:", cmd);
