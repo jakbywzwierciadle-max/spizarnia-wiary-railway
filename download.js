@@ -23,4 +23,39 @@ module.exports = async function downloadLatest() {
   const output = path.join(__dirname, "%(title)s.%(ext)s");
 
   const USER_AGENT =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
+
+  const cmd = [
+    `yt-dlp`,
+    `--cookies "${cookiesPath}"`,
+    `--force-ipv4`,
+    `--user-agent "${USER_AGENT}"`,
+    `--sleep-requests 1`,
+    `--sleep-interval 2`,
+    `--retries 10`,
+    `--retry-sleep 3`,
+    `--extractor-args "youtube:player_client=web;youtube:njs=1"`,
+    `--no-check-certificate`,
+    `--playlist-end 1`,
+    `-x --audio-format mp3`,
+    `-o "${output}"`,
+    `"${CHANNEL_URL}"`
+  ].join(" ");
+
+  console.log("🔧 Running command:", cmd);
+
+  try {
+    await execPromise(cmd);
+    console.log("✅ Audio downloaded.");
+  } catch (err) {
+    console.error("❌ yt-dlp error:", err);
+
+    if (String(err).includes("cookies are no longer valid")) {
+      console.error("⚠️ Cookies wygasły — Playwright pobierze nowe przy następnym uruchomieniu.");
+    }
+
+    if (String(err).includes("Sign in to confirm you're not a bot")) {
+      console.error("⚠️ YouTube wymusza logowanie — cookies są niepełne lub YouTube wykrył bota.");
+    }
+  }
+};
