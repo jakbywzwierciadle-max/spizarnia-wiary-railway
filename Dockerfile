@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        yt-dlp \
+        pip install --no-cache-dir -U yt-dlp \
         ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
