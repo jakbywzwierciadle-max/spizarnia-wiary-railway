@@ -27,4 +27,35 @@ module.exports.fetchYoutubeCookies = async function () {
 
   const page = await context.newPage();
 
-  //
+  // 1. Wejście na YouTube
+  await page.goto("https://www.youtube.com", { waitUntil: "networkidle" });
+
+  // 2. Akceptacja cookies (jeśli popup)
+  try {
+    await page.click('button:has-text("Akceptuję")', { timeout: 3000 });
+  } catch {}
+  try {
+    await page.click('button:has-text("Accept all")', { timeout: 3000 });
+  } catch {}
+
+  // 3. Pobranie cookies
+  const cookies = await context.cookies();
+
+  const cookiesTxt = cookies
+    .map(
+      (c) =>
+        `${c.domain}\tTRUE\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${
+          c.expires
+        }\t${c.name}\t${c.value}`
+    )
+    .join("\n");
+
+  const cookiesPath = path.join(__dirname, "cookies.txt");
+  fs.writeFileSync(cookiesPath, cookiesTxt);
+
+  console.log("🍪 Fresh cookies saved to cookies.txt");
+
+  await browser.close();
+
+  return cookiesPath;
+};
