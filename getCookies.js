@@ -53,4 +53,12 @@ export async function fetchYoutubeCookies() {
     })
     .join("\n");
 
-  const cookiesPath = path.join(__dirname
+  const cookiesPath = path.join(__dirname, "cookies.txt");
+  fs.writeFileSync(cookiesPath, cookiesTxt);
+
+  console.log("🍪 Fresh cookies saved to cookies.txt (Netscape format)");
+
+  await browser.close();
+
+  return cookiesPath;
+}
