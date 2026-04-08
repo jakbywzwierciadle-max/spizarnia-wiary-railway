@@ -1,7 +1,11 @@
-const { exec } = require("child_process");
-const path = require("path");
-const fs = require("fs");
-const { fetchYoutubeCookies } = require("./getCookies.js");
+import { exec } from "child_process";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { fetchYoutubeCookies } from "./getCookies.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function execPromise(cmd) {
   return new Promise((resolve, reject) => {
@@ -14,7 +18,7 @@ function execPromise(cmd) {
 
 const CHANNEL_URL = "https://www.youtube.com/@spizarniawiary/videos";
 
-module.exports = async function downloadLatest() {
+export default async function downloadLatest() {
   console.log("🎧 Fetching fresh YouTube cookies via Playwright...");
   const cookiesPath = await fetchYoutubeCookies();
 
@@ -55,7 +59,7 @@ module.exports = async function downloadLatest() {
     }
 
     if (String(err).includes("Sign in to confirm you're not a bot")) {
-      console.error("⚠️ YouTube wymusza logowanie — cookies są niepełne lub YouTube wykrył bota.");
+      console.error("⚠️ YouTube wykrył bota — cookies są niepełne lub YouTube wymaga pełnej sesji.");
     }
   }
-};
+}
