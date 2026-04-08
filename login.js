@@ -9,12 +9,20 @@ chromium.use(stealth());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ŚCIEŻKA DO TWOJEGO CHROME
+const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+
 async function loginAndSaveCookies() {
-  console.log("🔐 Launching browser for YouTube login...");
+  console.log("🔐 Launching Chrome for YouTube login...");
 
   const browser = await chromium.launch({
-    headless: false, // MUSI być widoczne
-    args: ["--no-sandbox", "--disable-dev-shm-usage"]
+    headless: false,
+    executablePath: chromePath,
+    args: [
+      "--disable-blink-features=AutomationControlled",
+      "--no-sandbox",
+      "--disable-dev-shm-usage"
+    ]
   });
 
   const context = await browser.newContext({
