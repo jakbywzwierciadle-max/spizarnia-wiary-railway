@@ -20,7 +20,8 @@ function execPromise(cmd) {
 export default async function downloadLatest() {
   console.log("🎧 Checking YouTube channel with cookies (Base64)...");
 
-  import { fetchYoutubeCookies } from "./getCookies.js";
+ const { fetchYoutubeCookies } = require("./getCookies.js");
+
 
 const cookiesPath = await fetchYoutubeCookies();
 
