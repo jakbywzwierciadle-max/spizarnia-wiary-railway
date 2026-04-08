@@ -20,11 +20,10 @@ function execPromise(cmd) {
 export default async function downloadLatest() {
   console.log("🎧 Checking YouTube channel with cookies (Base64)...");
 
-  const base64 = process.env.YTDLP_COOKIES_BASE64;
-  if (!base64) {
-    console.log("❌ Missing YTDLP_COOKIES_BASE64 env variable.");
-    return;
-  }
+  import { fetchYoutubeCookies } from "./getCookies.js";
+
+const cookiesPath = await fetchYoutubeCookies();
+
 
   // Decode cookies
   const decoded = Buffer.from(base64, "base64").toString("utf8");
