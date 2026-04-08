@@ -1,8 +1,12 @@
-const fs = require("fs");
-const path = require("path");
-const { chromium } = require("playwright");
+import fs from "fs";
+import path from "path";
+import { chromium } from "playwright";
+import { fileURLToPath } from "url";
 
-module.exports.fetchYoutubeCookies = async function () {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export async function fetchYoutubeCookies() {
   console.log("🌐 Launching Playwright to fetch fresh YouTube cookies...");
 
   const browser = await chromium.launch({
@@ -27,10 +31,8 @@ module.exports.fetchYoutubeCookies = async function () {
 
   const page = await context.newPage();
 
-  // 1. Wejście na YouTube
   await page.goto("https://www.youtube.com", { waitUntil: "networkidle" });
 
-  // 2. Akceptacja cookies (jeśli popup)
   try {
     await page.click('button:has-text("Akceptuję")', { timeout: 3000 });
   } catch {}
@@ -38,7 +40,6 @@ module.exports.fetchYoutubeCookies = async function () {
     await page.click('button:has-text("Accept all")', { timeout: 3000 });
   } catch {}
 
-  // 3. Pobranie cookies
   const cookies = await context.cookies();
 
   const cookiesTxt = cookies
@@ -58,4 +59,4 @@ module.exports.fetchYoutubeCookies = async function () {
   await browser.close();
 
   return cookiesPath;
-};
+}
