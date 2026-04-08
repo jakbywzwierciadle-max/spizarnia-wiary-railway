@@ -42,21 +42,15 @@ export async function fetchYoutubeCookies() {
 
   const cookies = await context.cookies();
 
+  // FIX: session cookies (-1) → ustawiamy ważność na 30 dni
+  const now = Math.floor(Date.now() / 1000);
+  const month = 30 * 24 * 60 * 60;
+
   const cookiesTxt = cookies
-    .map(
-      (c) =>
-        `${c.domain}\tTRUE\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${
-          c.expires
-        }\t${c.name}\t${c.value}`
-    )
+    .map((c) => {
+      const expires = c.expires > 0 ? c.expires : now + month;
+      return `${c.domain}\tTRUE\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${expires}\t${c.name}\t${c.value}`;
+    })
     .join("\n");
 
-  const cookiesPath = path.join(__dirname, "cookies.txt");
-  fs.writeFileSync(cookiesPath, cookiesTxt);
-
-  console.log("🍪 Fresh cookies saved to cookies.txt");
-
-  await browser.close();
-
-  return cookiesPath;
-}
+  const cookiesPath = path.join(__dirname
