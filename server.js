@@ -1,15 +1,19 @@
-const express = require("express");
-const path = require("path");
-const fs = require("fs");
-const downloadLatest = require("./download.js");
+import express from "express";
+import path from "path";
+import fs from "fs";
+import downloadLatest from "./download.js";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Serwowanie statycznych plików (audio + feed.xml)
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 
-// Endpoint do ręcznego wywołania pobierania
+// Endpoint do ręcznego odświeżenia
 app.get("/refresh", async (req, res) => {
   try {
     await downloadLatest();
@@ -41,4 +45,4 @@ app.listen(PORT, () => {
   });
 });
 
-module.exports = app;
+export default app;
