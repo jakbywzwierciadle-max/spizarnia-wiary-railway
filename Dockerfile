@@ -5,11 +5,14 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ffmpeg \
-        python3-pip && \
+        python3-pip \
+        nodejs \
+        npm && \
     rm -rf /var/lib/apt/lists/*
 
-# Najnowszy yt-dlp + JS runtime
+# Najnowszy yt-dlp + EJS solver
 RUN pip install --upgrade yt-dlp && \
+    pip install --upgrade yt-dlp[default] && \
     ln -s /usr/bin/node /usr/local/bin/node
 
 COPY package.json package-lock.json* ./
