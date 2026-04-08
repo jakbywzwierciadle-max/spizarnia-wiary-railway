@@ -9,21 +9,26 @@ chromium.use(stealth());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function loginAndSaveCookies() {
+async function loginAndSaveCookies() {
   console.log("🔐 Launching browser for YouTube login...");
 
   const browser = await chromium.launch({
-    headless: false, // MUSI być widoczne do logowania
+    headless: false, // MUSI być widoczne
     args: ["--no-sandbox", "--disable-dev-shm-usage"]
   });
 
-  const context = await browser.newContext();
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 720 }
+  });
+
   const page = await context.newPage();
 
-  console.log("🌐 Opening YouTube login page...");
-  await page.goto("https://accounts.google.com/signin/v2/identifier");
+  console.log("🌐 Opening Google login page...");
+  await page.goto("https://accounts.google.com/signin/v2/identifier", {
+    waitUntil: "networkidle"
+  });
 
-  console.log("👉 Zaloguj się ręcznie. Po zalogowaniu zamknij okno.");
+  console.log("👉 Zaloguj się w otwartym oknie. Po zalogowaniu zamknij okno.");
   await page.waitForEvent("close");
 
   const cookies = await context.cookies();
@@ -48,3 +53,7 @@ export async function loginAndSaveCookies() {
 
   await browser.close();
 }
+
+loginAndSaveCookies().catch((err) => {
+  console.error("❌ Login flow error:", err);
+});
