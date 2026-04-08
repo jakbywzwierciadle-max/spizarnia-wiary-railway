@@ -1,44 +1,44 @@
-import express from "express";
-import cron from "node-cron";
-import downloadLatest from "./download.js";
-import generateFeed from "./feed.js";
-import cleanup from "./cleanup.js";
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
+const downloadLatest = require("./download.js");
 
 const app = express();
+const PORT = process.env.PORT || 8080;
 
-app.get("/", (req, res) => res.send("Spiżarnia Wiary działa"));
+// Serwowanie statycznych plików (audio + feed.xml)
+app.use(express.static(path.join(__dirname)));
 
-app.get("/run", async (req, res) => {
+// Endpoint do ręcznego wywołania pobierania
+app.get("/refresh", async (req, res) => {
   try {
-    console.log("🚀 Manual workflow trigger");
     await downloadLatest();
-    await generateFeed();
-    res.send("Workflow done");
+    res.send("Feed refreshed and audio downloaded.");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error");
+    console.error("❌ Error refreshing feed:", err);
+    res.status(500).send("Error refreshing feed.");
   }
 });
 
-// 🔥 URUCHOMIENIE WORKFLOW OD RAZU PO STARCIU
-(async () => {
+// Główny endpoint
+app.get("/", (req, res) => {
+  const feedPath = path.join(__dirname, "feed.xml");
+
+  if (!fs.existsSync(feedPath)) {
+    return res.status(404).send("feed.xml not found");
+  }
+
+  res.sendFile(feedPath);
+});
+
+// Start serwera
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on ${PORT}`);
   console.log("⏳ Running workflow on startup...");
-  await downloadLatest();
-  await generateFeed();
-})();
 
-// Cron co 30 minut
-cron.schedule("*/30 * * * *", async () => {
-  console.log("⏳ Running workflow...");
-  await downloadLatest();
-  await generateFeed();
-  console.log("🚀 Workflow done.");
+  downloadLatest().catch((err) => {
+    console.error("❌ Startup workflow error:", err);
+  });
 });
 
-// Cleanup o 3:00
-cron.schedule("0 3 * * *", async () => {
-  await cleanup();
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
+module.exports = app;
