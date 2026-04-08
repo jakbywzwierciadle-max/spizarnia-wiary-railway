@@ -1,16 +1,16 @@
 {
-  "name": "spizarnia-wiary",
+  "name": "spizarnia-wiary-railway",
   "version": "1.0.0",
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "login": "node login.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "node-cron": "^3.0.3",
-    "xmlbuilder2": "^3.1.1",
+    "express": "^4.19.2",
     "playwright": "^1.44.0",
-    "xml2js": "^0.6.2"
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.1"
   }
 }
