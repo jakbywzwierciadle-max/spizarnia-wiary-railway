@@ -1,9 +1,13 @@
+import express from "express";
 import { exec } from "child_process";
 import fs from "fs";
-import express from "express";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+app.get("/", (req, res) => {
+  res.send("API is running");
+});
 
 app.get("/download", (req, res) => {
   const id = req.query.id;
@@ -28,4 +32,6 @@ app.get("/download", (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`API running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`API running on port ${PORT}`);
+});
