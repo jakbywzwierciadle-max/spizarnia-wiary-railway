@@ -1,2 +1,5 @@
 [build]
-packages = ["yt-dlp"]
+nixpacks = true
+
+[build.nixpacks]
+packages = ["quickjs"]
