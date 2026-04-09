@@ -1,38 +1,22 @@
-import express from "express";
-import { exec } from "child_process";
-import fs from "fs";
+import express from 'express';
+import { exec } from 'child_process';
 
 const app = express();
-const PORT = process.env.PORT || 8080;
 
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
+app.get('/download', async (req, res) => {
+    const id = req.query.id;
+    const url = `https://www.youtube.com/watch?v=${id}`;
 
-app.get("/download", (req, res) => {
-  const id = req.query.id;
-  if (!id) return res.status(400).send("Missing id");
+    const cmd = `chmod +x ./bin/yt-dlp && ./bin/yt-dlp --cookies ./cookies/cookies.txt -f bestaudio -o "/tmp/${id}.m4a" "${url}"`;
 
-  const filepath = `/tmp/${id}.m4a`;
-  const cmd = `chmod +x ./bin/yt-dlp && ./bin/yt-dlp --cookies ./cookies/cookies.txt -f bestaudio -o "/tmp/${id}.m4a" "${url}"`;
+    exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send(error.message);
+        }
 
-
-  exec(cmd, (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send("Download failed");
-    }
-
-    if (!fs.existsSync(filepath)) {
-      return res.status(500).send("File not found");
-    }
-
-    res.download(filepath, `${id}.m4a`, () => {
-      fs.unlinkSync(filepath);
+        res.download(`/tmp/${id}.m4a`);
     });
-  });
 });
 
-app.listen(PORT, () => {
-  console.log(`API running on port ${PORT}`);
-});
+app.listen(8080, () => console.log('API running on port 8080'));
