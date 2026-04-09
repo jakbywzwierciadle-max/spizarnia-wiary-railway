@@ -1,6 +1,6 @@
 import express from "express";
 import { downloadLatest } from "./download.js";
-import { generateFeed } from "./feed.js";
+import generateFeed from "./feed.js";   // ← TU JEST POPRAWKA
 
 const app = express();
 const PORT = process.env.PORT || 8080;
