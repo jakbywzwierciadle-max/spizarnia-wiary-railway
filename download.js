@@ -14,7 +14,8 @@ app.get("/download", (req, res) => {
   if (!id) return res.status(400).send("Missing id");
 
   const filepath = `/tmp/${id}.m4a`;
-  const cmd = `chmod +x ./bin/yt-dlp && ./bin/yt-dlp -f bestaudio -o "${filepath}" "https://www.youtube.com/watch?v=${id}"`;
+  const cmd = `chmod +x ./bin/yt-dlp && ./bin/yt-dlp --cookies ./cookies/cookies.txt -f bestaudio -o "/tmp/${id}.m4a" "${url}"`;
+
 
   exec(cmd, (err) => {
     if (err) {
