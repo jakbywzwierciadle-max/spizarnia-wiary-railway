@@ -7,7 +7,7 @@ app.get('/download', async (req, res) => {
     const id = req.query.id;
     const url = `https://www.youtube.com/watch?v=${id}`;
 
-    const cmd = `chmod +x ./bin/yt-dlp && ./bin/yt-dlp --cookies ./cookies/cookies.txt -f bestaudio -o "/tmp/${id}.m4a" "${url}"`;
+    const cmd = `chmod +x ./bin/yt-dlp && ./bin/yt-dlp --cookies ./cookies/cookies.txt -F "https://www.youtube.com/watch?v=iQ19INi1dJg"`;
 
     exec(cmd, (error, stdout, stderr) => {
         if (error) {
