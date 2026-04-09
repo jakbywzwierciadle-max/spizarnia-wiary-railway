@@ -1,4 +1,0 @@
-{
-  "schedule": "0 */12 * * *",
-  "command": "npm run cron"
-}
